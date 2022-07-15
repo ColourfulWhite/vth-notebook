@@ -1,0 +1,1504 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <atom:link href="https://floli.cc/rss.xml" rel="self" type="application/rss+xml"/>
+    <title>Notebook</title>
+    <link>https://floli.cc/</link>
+    <description>Ackerven's knowledge planet.</description>
+    <language>zh-CN</language>
+    <pubDate>Fri, 15 Jul 2022 07:10:03 GMT</pubDate>
+    <lastBuildDate>Fri, 15 Jul 2022 07:10:03 GMT</lastBuildDate>
+    <generator>vuepress-plugin-feed2</generator>
+    <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+    <category>other</category>
+    <category>algorithm</category>
+    <category>cornerstone</category>
+    <category>framework</category>
+    <category>language</category>
+    <category>philosophy</category>
+    <category>article</category>
+    <category>technology</category>
+    <item>
+      <title>GitHub 私有仓库开启 GitHub Pages 的可行性方案</title>
+      <link>https://floli.cc/post/PrivateHubGithubPages.html</link>
+      <guid>https://floli.cc/post/PrivateHubGithubPages.html</guid>
+      <source url="https://floli.cc/rss.xml">GitHub 私有仓库开启 GitHub Pages 的可行性方案</source>
+      <pubDate>Fri, 15 Jul 2022 07:09:03 GMT</pubDate>
+      <content:encoded><![CDATA[<h1 id="github-私有仓库开启-github-pages-的可行性方案" tabindex="-1"> GitHub 私有仓库开启 GitHub Pages 的可行性方案</h1>
+<h2 id="前言" tabindex="-1"> 前言</h2>
+<p>GitHub 的私有仓库开启 GitHub Pages 需要升级为 Pro 用户（ $4/mon）。</p>
+<p>对于只是需要私有仓库开启 GitHub Pages 的我来说，性价比是非常低的。</p>
+<p><strong>在看这篇文章的你，需要知道如何使用 Git 以及 GitHub 的一些基本操作。</strong></p>
+<h2 id="创建-github-账号-可选" tabindex="-1"> 创建 GitHub 账号（可选）</h2>
+<p>如果你不愿公开 GitHub Pages 的静态资源文件，你需要创建一个新的 GitHub 账号，用来存放 GitHub Pages 的静态资源文件。</p>
+<p>Tips：新的 GitHub 账号的用户名尽可能的复杂，让人猜想不到。</p>
+<h2 id="创建公开仓库" tabindex="-1"> 创建公开仓库</h2>
+<p>创建一个用于存放 GitHub Pages 静态资源文件的仓库。</p>
+<p>创建完仓库后，并不需要自己手动开启 GitHub Pages。</p>
+<h2 id="在公开仓库开启-github-pages" tabindex="-1"> 在公开仓库开启 GitHub Pages</h2>
+<p>当一个仓库创建 <code>gh-pages</code> 后，GitHub 默认为这个仓库开启 GitHub Pages。</p>
+<p>有两种方式维护公开仓库的 GitHub Pages。</p>
+<ul>
+<li>
+<p>手动维护</p>
+<p>每次把源代码构建成网站的静态资源后，手动执行 <code>git push</code> 把静态资源上传到公开仓库的 <code>gh-pages</code> 分支。</p>
+</li>
+<li>
+<p>GitHub Actions</p>
+<p>直接在私有仓库配置 Actions，每次 <code>git push</code> 后自动执行构建，并把构建得到的静态资源 <code>git push</code> 到公开仓库的 <code>gh-pages</code> 分支。</p>
+</li>
+</ul>
+<p>强烈推荐使用 <strong>GitHub Actions</strong> 。GitHub Actions 的配置文件使用 YAML 语法，配置项简单，一次配置，自动发布。</p>
+<h3 id="github-actions" tabindex="-1"> GitHub Actions</h3>
+<p>在私有仓库中配置 Actions，把源代码构建成静态资源文件后 push 到公开仓库的 <code>gh-pages</code> 分支。</p>
+<p><strong>注意：如果公开仓库与私有仓库不在同一个账号，需要把公开仓库账号的 Person access Token 添加到私有仓库的 Secrets 中。</strong></p>
+<p><img src="https://s2.loli.net/2022/07/15/GQoRIrueTdfU9q3.png" alt=""></p>
+<p><strong>Action 配置文件参考：</strong></p>
+<p><code>&lt;xxx&gt;</code> 代表必填项且需要按自己实际情况更改。</p>
+<div><pre><code><span>name</span><span>:</span> Deploy Site
+
+<span>on</span><span>:</span>
+  <span>push</span><span>:</span>
+    <span>branches</span><span>:</span> <span>[</span> master <span>]</span>
+
+<span>jobs</span><span>:</span>
+  <span>build</span><span>:</span>
+    <span>runs-on</span><span>:</span> ubuntu<span>-</span>latest
+    <span>steps</span><span>:</span>
+      <span>-</span> <span>name</span><span>:</span> Checkout
+        <span>uses</span><span>:</span> actions/checkout@v3
+        <span>with</span><span>:</span>
+          <span>persist-credentials</span><span>:</span> fasle <span># false 是用 personal token，true 是使用 GitHub token</span>
+          <span>fetch-depth</span><span>:</span> <span>0</span>
+
+     <span># ... TODO Build your site</span>
+
+	 <span># &lt;work-dir> 静态资源所在的目录</span>
+     <span># &lt;domain> 需要 github.io 绑定的域名</span>
+     <span># &lt;username> git commit 用户名</span>
+     <span># &lt;mail> git commit 邮箱</span>
+     <span># &lt;message> git commit 的 message</span>
+     <span># &lt;secrets_name> Secrets 名称</span>
+     <span># &lt;github_username> github 的用户名（公开仓库）</span>
+     <span># &lt;repo> 公开仓库名</span>
+      <span>-</span> <span>name</span><span>:</span> Commit and Push
+        <span>working-directory</span><span>:</span> &lt;work<span>-</span>dir<span>></span>
+        <span>run</span><span>:</span> <span>|</span><span>
+          echo "&lt;domain>" > CNAME
+          git init
+          git checkout -b gh-pages
+          git add -A
+          git -c user.name='&lt;username>' -c user.email='&lt;mail>' commit -m '&lt;message>' 
+          git remote add origin https://${{secrets.&lt;secrets_name>}}@github.com/&lt;github_username>/&lt;repo>.git
+          git push origin gh-pages -f -q</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div><p>参考这个配置需要注意几点：</p>
+<ol>
+<li>如果你的公开仓库与私有仓库在同一个账号下：
+<ul>
+<li>第 14 行的 false 改为 true</li>
+<li>第 35 行的 url 不需要 <code>${{secrets.&lt;secrets_name&gt;}}@</code> 这一段</li>
+</ul>
+</li>
+<li>如果你不需要 GitHub Pages 绑定域名，需要把第 30 行删除。</li>
+<li>使用 <code>Secrets</code> 的好处是可以随时更换 PAT，且不会在配置文件中泄露敏感信息。</li>
+</ol>
+<h2 id="使用-cloudflare-加速-隐藏真实地址-可选" tabindex="-1"> 使用 Cloudflare 加速 + 隐藏真实地址（可选）</h2>
+<p>由于某些不可抗拒因素，在国内访问 <code>xxx.github.io</code> 是一个很魔幻的事情，有时很慢，甚至无法打开。</p>
+<p>对于这种情况，可以使用 Cloudflare 加速访问。</p>
+<p>同时，如果你不愿公开 GitHub Pages 的静态资源文件，但开启 GitHub Pages 后，使用 <code>xxx.github.io</code> 的方式访问的话，新建 GitHub 账号也将毫无意义。即使配置域名后，虽然在一定程度上隐藏了真实地址，但仍可以通过扫描 DNS 记录，找到真实的 <code>xxx.github.io</code> 的地址。</p>
+<p>幸运的是，Cloudflare 在加速访问的同时，也帮你隐藏了真实的地址。</p>
+<hr>
+<p><img src="https://s2.loli.net/2022/07/15/6DwQoiUfrHg9G83.png" alt=""></p>
+]]></content:encoded>
+      <enclosure url="https://s2.loli.net/2022/07/15/GQoRIrueTdfU9q3.png" type="image/png"/>
+    </item>
+    <item>
+      <title>FAQ</title>
+      <link>https://floli.cc/other/vuepressthemehope/faq.html</link>
+      <guid>https://floli.cc/other/vuepressthemehope/faq.html</guid>
+      <source url="https://floli.cc/rss.xml">FAQ</source>
+      <description>VuePress Theme Hope FAQ</description>
+      <category>other</category>
+      <pubDate>Wed, 13 Jul 2022 15:00:54 GMT</pubDate>
+      <content:encoded><![CDATA[<h1 id="faq" tabindex="-1"> FAQ</h1>
+<h2 id="如何从-github-拉取仓库" tabindex="-1"> 如何从 Github 拉取仓库？</h2>
+<p>从 2021年8月13日起，Github 不再支持使用用户名密码的方式认证，必须使用 Personal access token。</p>
+<p>对于私有仓库，必须通过配置 token 来进行仓库的拉取和上传。</p>
+<ol>
+<li>
+<p>在 <strong>Setting -&gt; Developer settings -&gt; Personal access tokens</strong> 生成 token</p>
+</li>
+<li>
+<p>使用 token 拉取代码</p>
+<p><code>git clone https://&lt;token&gt;@github.com/&lt;username&gt;/&lt;hub&gt;.git</code></p>
+</li>
+</ol>
+<p>如果需要更新 token，执行 <code>git remote set-url origin https://&lt;token&gt;@github.com/...</code></p>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>笔记（本）的 CURD 流程规范</title>
+      <link>https://floli.cc/other/vuepressthemehope/note.html</link>
+      <guid>https://floli.cc/other/vuepressthemehope/note.html</guid>
+      <source url="https://floli.cc/rss.xml">笔记（本）的 CURD 流程规范</source>
+      <description>VuePress Theme Hope note</description>
+      <category>other</category>
+      <pubDate>Wed, 13 Jul 2022 14:59:59 GMT</pubDate>
+      <content:encoded><![CDATA[<h1 id="笔记-本-的-curd-流程规范" tabindex="-1"> 笔记（本）的 CURD 流程规范</h1>
+<h2 id="新增笔记本" tabindex="-1"> 新增笔记本</h2>
+<ol>
+<li>
+<p>新建一个分支，分支名尽量同笔记本名</p>
+</li>
+<li>
+<p>在对应分类下新建文件夹，文件夹名即为笔记本名</p>
+</li>
+<li>
+<p>在新建的文件夹下新建 <a href="http://README.md" target="_blank" rel="noopener noreferrer">README.md</a> 文件</p>
+<p><a href="http://README.md" target="_blank" rel="noopener noreferrer">README.md</a> 文件至少包含两部分，第一部分是介绍这个笔记本的作用，第二部分是文章列表（tasklist）</p>
+<p>YAML 配置参考：</p>
+<div><pre><code><span>order</span><span>:</span>
+<span>title</span><span>:</span> 
+<span>icon</span><span>:</span> 
+<span>description</span><span>:</span> 
+<span>category</span><span>:</span> 
+  <span>-</span> 
+<span>tag</span><span>:</span> 
+  <span>-</span> 
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div></li>
+<li>
+<p>把这个文件夹路径加到 <code>navbar.ts</code> 中对于分类的 <code>children</code> 中</p>
+</li>
+<li>
+<p>在当前分类文件夹下的 <a href="http://README.md" target="_blank" rel="noopener noreferrer">README.md</a> 的笔记集合中添加超链接</p>
+</li>
+<li>
+<p>在<strong>目录</strong>中添加超链接</p>
+</li>
+<li>
+<p>把整个项目拷贝到虚拟机中，执行 <code>pnpm docs:build</code>，预览笔记</p>
+</li>
+<li>
+<p>git commit 规范为 <code>add notebook xxx</code></p>
+</li>
+<li>
+<p>完成后把分支 push 到 Github，提 pr 进行 merge</p>
+</li>
+</ol>
+<h2 id="新增笔记" tabindex="-1"> 新增笔记</h2>
+<ol>
+<li>
+<p>新建一个分支</p>
+</li>
+<li>
+<p>添加新的笔记 md 文件并开始写笔记</p>
+</li>
+<li>
+<p>把笔记添加到笔记本 <a href="http://README.md" target="_blank" rel="noopener noreferrer">README.md</a> 文件的文章列表中</p>
+</li>
+<li>
+<p>把整个项目拷贝到虚拟机中，执行 <code>pnpm docs:build</code>，预览笔记</p>
+</li>
+<li>
+<p>确认无误后，把分支 push 到 Github，提 pr 进行 merge</p>
+<p>git commit 规范：</p>
+<ul>
+<li>第一次添加笔记：<code>add note xxx(notebookName)</code></li>
+<li>添加新内容：<code>update note xxx(notebookName)</code></li>
+<li>修改笔记：<code>fix note xxx(notebookName)</code></li>
+</ul>
+<p>xxx 为 md 文件名称。</p>
+</li>
+</ol>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>Markdown 增强</title>
+      <link>https://floli.cc/other/vuepressthemehope/markdown.html</link>
+      <guid>https://floli.cc/other/vuepressthemehope/markdown.html</guid>
+      <source url="https://floli.cc/rss.xml">Markdown 增强</source>
+      <description>VuePress Theme Hope Markdown</description>
+      <category>other</category>
+      <pubDate>Wed, 13 Jul 2022 14:58:47 GMT</pubDate>
+      <content:encoded><![CDATA[<h1 id="markdown-增强" tabindex="-1"> Markdown 增强</h1>
+<h2 id="tex" tabindex="-1"> Tex</h2>
+<ul>
+<li>
+<p>行内语法</p>
+<p>使用 <code>$codes$</code> 来表示。</p>
+<div><pre><code>Euler’s identity $e^{i\pi}+1=0$ is a beautiful formula in $\mathbb{R}^2$.
+</code></pre><div aria-hidden="true"><div></div></div></div><p>效果：Euler’s identity <span><span><i>Content not supported</i></span><span aria-hidden="true"><span><span style="height:0.908em;vertical-align:-0.0833em;"></span><span><span>e</span><span><span><span><span style="height:0.8247em;"><span style="top:-3.063em;margin-right:0.05em;"><span style="height:2.7em;"></span><span><span><span style="margin-right:0.03588em;">iπ</span></span></span></span></span></span></span></span></span><span style="margin-right:0.2222em;"></span><span>+</span><span style="margin-right:0.2222em;"></span></span><span><span style="height:0.6444em;"></span><span>1</span><span style="margin-right:0.2778em;"></span><span>=</span><span style="margin-right:0.2778em;"></span></span><span><span style="height:0.6444em;"></span><span>0</span></span></span></span> is a beautiful formula in <span><span><i>Content not supported</i></span><span aria-hidden="true"><span><span style="height:0.8141em;"></span><span><span>R</span><span><span><span><span style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span style="height:2.7em;"></span><span><span>2</span></span></span></span></span></span></span></span></span></span></span>.</p>
+</li>
+<li>
+<p>块语法</p>
+<p>使用 <code>$$codes$$</code> 来表示。</p>
+<div><pre><code>$$
+\frac {\partial^r} {\partial \omega^r} \left(\frac {y^{\omega}} {\omega}\right)
+= \left(\frac {y^{\omega}} {\omega}\right) \left\{(\log y)^r + \sum_{i=1}^r \frac {(-1)^i r \cdots (r-i+1) (\log y)^{r-i}} {\omega^i} \right\}
+$$
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div></div></div><p>效果：</p>
+<p class='katex-block'><span><span><span><i>Content not supported</i></span><span aria-hidden="true"><span><span style="height:2.4em;vertical-align:-0.95em;"></span><span><span></span><span><span><span><span style="height:1.3714em;"><span style="top:-2.314em;"><span style="height:3em;"></span><span><span style="margin-right:0.05556em;">∂</span><span><span style="margin-right:0.03588em;">ω</span><span><span><span><span style="height:0.5904em;"><span style="top:-2.989em;margin-right:0.05em;"><span style="height:2.7em;"></span><span><span style="margin-right:0.02778em;">r</span></span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span style="height:3em;"></span><span style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span style="height:3em;"></span><span><span><span style="margin-right:0.05556em;">∂</span><span><span><span><span style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span style="height:2.7em;"></span><span><span style="margin-right:0.02778em;">r</span></span></span></span></span></span></span></span></span></span></span><span>​</span></span><span><span style="height:0.686em;"><span></span></span></span></span></span><span></span></span><span style="margin-right:0.1667em;"></span><span><span style="top:0em;"><span>(</span></span><span><span></span><span><span><span><span style="height:1.3414em;"><span style="top:-2.314em;"><span style="height:3em;"></span><span><span style="margin-right:0.03588em;">ω</span></span></span><span style="top:-3.23em;"><span style="height:3em;"></span><span style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span style="height:3em;"></span><span><span><span style="margin-right:0.03588em;">y</span><span><span><span><span style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span style="height:2.7em;"></span><span><span><span style="margin-right:0.03588em;">ω</span></span></span></span></span></span></span></span></span></span></span></span><span>​</span></span><span><span style="height:0.686em;"><span></span></span></span></span></span><span></span></span><span style="top:0em;"><span>)</span></span></span><span style="margin-right:0.2778em;"></span><span>=</span><span style="margin-right:0.2778em;"></span></span><span><span style="height:3.0277em;vertical-align:-1.2777em;"></span><span><span style="top:0em;"><span>(</span></span><span><span></span><span><span><span><span style="height:1.3414em;"><span style="top:-2.314em;"><span style="height:3em;"></span><span><span style="margin-right:0.03588em;">ω</span></span></span><span style="top:-3.23em;"><span style="height:3em;"></span><span style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span style="height:3em;"></span><span><span><span style="margin-right:0.03588em;">y</span><span><span><span><span style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span style="height:2.7em;"></span><span><span><span style="margin-right:0.03588em;">ω</span></span></span></span></span></span></span></span></span></span></span></span><span>​</span></span><span><span style="height:0.686em;"><span></span></span></span></span></span><span></span></span><span style="top:0em;"><span>)</span></span></span><span style="margin-right:0.1667em;"></span><span><span style="top:0em;"><span>{</span></span><span>(</span><span>lo<span style="margin-right:0.01389em;">g</span></span><span style="margin-right:0.1667em;"></span><span style="margin-right:0.03588em;">y</span><span><span>)</span><span><span><span><span style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span style="height:2.7em;"></span><span><span style="margin-right:0.02778em;">r</span></span></span></span></span></span></span></span><span style="margin-right:0.2222em;"></span><span>+</span><span style="margin-right:0.2222em;"></span><span><span><span><span style="height:1.6514em;"><span style="top:-1.8723em;margin-left:0em;"><span style="height:3.05em;"></span><span><span><span>i</span><span>=</span><span>1</span></span></span></span><span style="top:-3.05em;"><span style="height:3.05em;"></span><span><span>∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span style="height:3.05em;"></span><span><span style="margin-right:0.02778em;">r</span></span></span></span><span>​</span></span><span><span style="height:1.2777em;"><span></span></span></span></span></span><span style="margin-right:0.1667em;"></span><span><span></span><span><span><span><span style="height:1.5017em;"><span style="top:-2.314em;"><span style="height:3em;"></span><span><span><span style="margin-right:0.03588em;">ω</span><span><span><span><span style="height:0.7507em;"><span style="top:-2.989em;margin-right:0.05em;"><span style="height:2.7em;"></span><span><span>i</span></span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span style="height:3em;"></span><span style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span style="height:3em;"></span><span><span>(</span><span>−</span><span>1</span><span><span>)</span><span><span><span><span style="height:0.8247em;"><span style="top:-3.063em;margin-right:0.05em;"><span style="height:2.7em;"></span><span><span>i</span></span></span></span></span></span></span></span><span style="margin-right:0.02778em;">r</span><span style="margin-right:0.1667em;"></span><span>⋯</span><span style="margin-right:0.1667em;"></span><span>(</span><span style="margin-right:0.02778em;">r</span><span style="margin-right:0.2222em;"></span><span>−</span><span style="margin-right:0.2222em;"></span><span>i</span><span style="margin-right:0.2222em;"></span><span>+</span><span style="margin-right:0.2222em;"></span><span>1</span><span>)</span><span>(</span><span>lo<span style="margin-right:0.01389em;">g</span></span><span style="margin-right:0.1667em;"></span><span style="margin-right:0.03588em;">y</span><span><span>)</span><span><span><span><span style="height:0.8247em;"><span style="top:-3.063em;margin-right:0.05em;"><span style="height:2.7em;"></span><span><span><span style="margin-right:0.02778em;">r</span><span>−</span><span>i</span></span></span></span></span></span></span></span></span></span></span></span><span>​</span></span><span><span style="height:0.686em;"><span></span></span></span></span></span><span></span></span><span style="top:0em;"><span>}</span></span></span></span></span></span></span></p>
+</li>
+</ul>
+<h2 id="上下角标" tabindex="-1"> 上下角标</h2>
+<ul>
+<li>
+<p>使用 <code>^text^</code> 进行上角标标注。</p>
+<div><pre><code>19^th^
+</code></pre><div aria-hidden="true"><div></div></div></div><p>效果：19<sup>th</sup></p>
+</li>
+<li>
+<p>使用 <code>~text~</code> 进行下角标标注。</p>
+<div><pre><code>H<span><span>~</span><span>2</span><span>~</span></span>O
+</code></pre><div aria-hidden="true"><div></div></div></div><p>效果：H<sub>2</sub>O</p>
+</li>
+</ul>
+<h2 id="代码块分组" tabindex="-1"> 代码块分组</h2>
+<p>将选项卡包装在 <code>code-tabs</code> 容器中。</p>
+<p>可以在 <code>code-tabs</code> 容器中添加一个 id 后缀，改后缀将用作选项卡的 id。所具有相同 id 的选项卡将共享相同的切换事件。</p>
+<div><pre><code>::: code-tabs#java
+<span>&lt;!-- java 将用作 id --></span>
+:::
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div></div></div><p>在容器内，使用 <code>@tab</code> 标记来标记和分割选项卡的内容。</p>
+<p>在 <code>@tab</code> 标记后，可以添加 <code>:active</code> 默认激活选项卡，之后的文本将被解析为选项卡标题。</p>
+<div><pre><code>::: code-tabs
+
+@tab 标题 1
+<span>&lt;!-- 内容 --></span>
+
+@tab 标题 2
+<span>&lt;!-- 内容 --></span>
+
+@tab:active 标题 3
+<span>&lt;!-- 标题3 将会被默认激活 --></span>
+<span>&lt;!-- 内容 --></span>
+
+:::
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div><p>默认情况下，标题将用作选项卡的值，但可以使用 id 后缀覆盖。</p>
+<div><pre><code>::: code-tabs
+
+@tab 标题 1
+<span>&lt;!-- 此处，选项卡 1 的标题“标题 1”将用作值。 --></span>
+<span>&lt;!-- tab 1 内容 --></span>
+
+@tab 标题 2#值 2
+<span>&lt;!-- 这里，tab 2 的标题将是 “标题 2”，但它会使用 “值 2” 作为选项卡的值--></span>
+<span>&lt;!-- tab 2 内容 --></span>
+
+:::
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div><p><strong>如果需要选项卡一起切换，可以使用相同的选项卡 ID 来绑定他们。</strong></p>
+<p><strong>针对每个选项卡 ID 的选择会被存储并进行持久化。</strong></p>
+<h3 id="案例" tabindex="-1"> 案例</h3>
+<div><pre><code>Hello World
+
+::: code-tabs#demo
+
+@tab C
+<span><span>```</span><span>c</span>
+<span>#include&lt;stdio.h>
+int main() {
+	print("Hello World!\n");
+	return 0;
+}</span>
+<span>```</span></span>
+
+@tab C++
+<span><span>```</span><span>cpp</span>
+<span>#include&lt;iostream>
+using namespace std;
+
+int main() {
+	cout &lt;&lt; "Hello World" &lt;&lt; endl;
+	return 0;
+}</span>
+<span>```</span></span>
+
+@tab:active Java
+<span><span>```</span><span>java</span>
+<span>import java.utils.*
+public class HelloWorld {
+	public static void main(String[] args) {
+		System.out.println("Hello World");
+	}
+}</span>
+<span>```</span></span>
+
+:::
+
+简单的 1 + 1
+::: code-tabs#demo
+@tab C
+<span><span>```</span><span>c</span>
+<span>#include&lt;stdio.h>
+int main() {
+	print("1 + 1 = %d\n", 1+1);
+	return 0;
+}</span>
+<span>```</span></span>
+
+@tab C++
+<span><span>```</span><span>cpp</span>
+<span>#include&lt;iostream>
+using namespace std;
+
+int main() {
+	cout &lt;&lt; "1 + 1 = "&lt;&lt; 1 + 1 &lt;&lt; endl;
+	return 0;
+}</span>
+<span>```</span></span>
+
+@tab:active Java
+<span><span>```</span><span>java</span>
+<span>import java.utils.*
+public class HelloWorld {
+	public static void main(String[] args) {
+		System.out.printf("1 + 1 = %d", 1 + 1);
+	}
+}</span>
+<span>```</span></span>
+
+:::
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div><p>效果：</p>
+<p>Hello World</p>
+<CodeTabs :data='[{"title":"C"},{"title":"C++"},{"title":"Java"}]' :active="2" tab-id="demo">
+
+<template #tab0="{ title, value, isActive }">
+<div><pre><code><span><span>#</span><span>include</span><span>&lt;stdio.h></span></span>
+<span>int</span> <span>main</span><span>(</span><span>)</span> <span>{</span>
+	<span>print</span><span>(</span><span>"Hello World!\n"</span><span>)</span><span>;</span>
+	<span>return</span> <span>0</span><span>;</span>
+<span>}</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div></div></div></template>
+<template #tab1="{ title, value, isActive }">
+<div><pre><code><span><span>#</span><span>include</span><span>&lt;iostream></span></span>
+<span>using</span> <span>namespace</span> std<span>;</span>
+
+<span>int</span> <span>main</span><span>(</span><span>)</span> <span>{</span>
+	cout <span>&lt;&lt;</span> <span>"Hello World"</span> <span>&lt;&lt;</span> endl<span>;</span>
+	<span>return</span> <span>0</span><span>;</span>
+<span>}</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div></template>
+<template #tab2="{ title, value, isActive }">
+<div><pre><code><span>import</span> <span>java<span>.</span>utils<span>.</span></span><span>*</span>
+<span>public</span> <span>class</span> <span>HelloWorld</span> <span>{</span>
+	<span>public</span> <span>static</span> <span>void</span> <span>main</span><span>(</span><span>String</span><span>[</span><span>]</span> args<span>)</span> <span>{</span>
+		<span>System</span><span>.</span>out<span>.</span><span>println</span><span>(</span><span>"Hello World"</span><span>)</span><span>;</span>
+	<span>}</span>
+<span>}</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div></div></div></template>
+</CodeTabs>
+<p>简单的 1 + 1</p>
+<CodeTabs :data='[{"title":"C"},{"title":"C++"},{"title":"Java"}]' :active="2" tab-id="demo">
+
+<template #tab0="{ title, value, isActive }">
+<div><pre><code><span><span>#</span><span>include</span><span>&lt;stdio.h></span></span>
+<span>int</span> <span>main</span><span>(</span><span>)</span> <span>{</span>
+	<span>print</span><span>(</span><span>"1 + 1 = %d\n"</span><span>,</span> <span>1</span><span>+</span><span>1</span><span>)</span><span>;</span>
+	<span>return</span> <span>0</span><span>;</span>
+<span>}</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div></div></div></template>
+<template #tab1="{ title, value, isActive }">
+<div><pre><code><span><span>#</span><span>include</span><span>&lt;iostream></span></span>
+<span>using</span> <span>namespace</span> std<span>;</span>
+
+<span>int</span> <span>main</span><span>(</span><span>)</span> <span>{</span>
+	cout <span>&lt;&lt;</span> <span>"1 + 1 = "</span><span>&lt;&lt;</span> <span>1</span> <span>+</span> <span>1</span> <span>&lt;&lt;</span> endl<span>;</span>
+	<span>return</span> <span>0</span><span>;</span>
+<span>}</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div></template>
+<template #tab2="{ title, value, isActive }">
+<div><pre><code><span>import</span> <span>java<span>.</span>utils<span>.</span></span><span>*</span>
+<span>public</span> <span>class</span> <span>HelloWorld</span> <span>{</span>
+	<span>public</span> <span>static</span> <span>void</span> <span>main</span><span>(</span><span>String</span><span>[</span><span>]</span> args<span>)</span> <span>{</span>
+		<span>System</span><span>.</span>out<span>.</span><span>printf</span><span>(</span><span>"1 + 1 = %d"</span><span>,</span> <span>1</span> <span>+</span> <span>1</span><span>)</span><span>;</span>
+	<span>}</span>
+<span>}</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div></div></div></template>
+</CodeTabs>
+<h2 id="任务列表" tabindex="-1"> 任务列表</h2>
+<ul>
+<li>
+<p>使用 <code>- [ ] task</code> 渲染一个未勾选的任务项</p>
+<div><pre><code><span>-</span> [ ] Plan A
+</code></pre><div aria-hidden="true"><div></div></div></div><p>效果：</p>
+<ul>
+<li><input type="checkbox" id="task-item-0" disabled="disabled"><label for="task-item-0"> Plan A</label></li>
+</ul>
+</li>
+<li>
+<p>使用 <code>- [x] task</code> 渲染一个已勾选的任务项</p>
+<div><pre><code><span>-</span> [x] Plan B
+</code></pre><div aria-hidden="true"><div></div></div></div><p>效果：</p>
+<ul>
+<li><input type="checkbox" id="task-item-1" checked="checked" disabled="disabled"><label for="task-item-1"> Plan B</label></li>
+</ul>
+</li>
+</ul>
+<h2 id="标记" tabindex="-1"> 标记</h2>
+<p>使用 <code>== ==</code> 进行标记。<strong>注意两边需要有空格。</strong></p>
+<div><pre><code>Today is ==Saturday==.
+</code></pre><div aria-hidden="true"><div></div></div></div><p>效果：Today is <mark>Saturday</mark>.</p>
+<h2 id="脚注" tabindex="-1"> 脚注</h2>
+<p>使用 <code>[^锚点文字]</code> 定义脚注。</p>
+<p>使用 <code>[^锚点文字]: ...</code> 来描述脚注。</p>
+<p><strong>如果脚注包含多个段落，其后的段落应当保持双层缩进。</strong></p>
+<div><pre><code>脚注 1 链接[^first].
+
+脚注 2 链接[^second].
+
+行内的脚注^[Text of inline footnote] 定义.
+
+重复的页脚定义[^second].
+
+<span><span>[</span><span>^first</span><span>]</span><span>:</span> 脚注</span> <span><span>**</span><span>可以包含特殊标记</span><span>**</span></span>
+
+<span>    也可以由多个段落组成</span>
+
+<span><span>[</span><span>^second</span><span>]</span><span>:</span> 脚注文字。</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div><p>效果：</p>
+<p>脚注 1 链接<sup></sup>.</p>
+<p>脚注 2 链接<sup></sup>.</p>
+<p>行内的脚注<sup></sup> 定义.</p>
+<p>重复的页脚定义<sup></sup>.</p>
+<h2 id="自定义容器" tabindex="-1"> 自定义容器</h2>
+<p>有提示、注释、信息、注意、警告和详情等自定义容器。</p>
+<div><pre><code>::: info
+信息容器。
+:::
+
+::: note
+注释容器。
+:::
+
+::: tip
+提示容器
+:::
+
+::: warning
+警告容器
+:::
+
+::: danger
+危险容器
+:::
+
+::: details
+详情容器
+:::
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div><p>效果：</p>
+<div><p>相关信息</p>
+<p>信息容器。</p>
+</div>
+<div><p>注</p>
+<p>注释容器。</p>
+</div>
+<div><p>提示</p>
+<p>提示容器</p>
+</div>
+<div><p>注意</p>
+<p>警告容器</p>
+</div>
+<div><p>警告</p>
+<p>危险容器</p>
+</div>
+<details><summary>详情</summary>
+<p>详情容器</p>
+</details>
+<p>可以为容器自定义标题，具体做法是在容器名称后添加文本标题。</p>
+<div><pre><code>::: info 自定义信息
+自定义标题的信息容器
+:::
+
+::: note 自定义注释
+自定义标题的注释容器
+:::
+
+::: tip 自定义提示
+自定义标题的提示容器
+:::
+
+::: warning 自定义警告
+自定义标题的警告容器
+:::
+
+::: danger 自定义危险
+自定义标题的危险容器
+:::
+
+::: details 自定义详情
+自定义标题的详情容器
+:::
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div><h2 id="图片" tabindex="-1"> 图片</h2>
+<ul>
+<li>
+<p>imageMark</p>
+<p>GFM 支持通过 ID 标记图片，使得图片只在特定的模式下显示。Vuepress Theme Hope 同时支持 Github 的标记与简易标记 <code>#light</code> 和 <code>#dark</code>。</p>
+<div><pre><code><span><span>!</span>[<span>GitHub Light</span>](<span>/assets/icon/github-light.png#gh-dark-mode-only</span>)</span>
+<span><span>!</span>[<span>GitHub Dark</span>](<span>/assets/icon/github-dark.png#gh-light-mode-only</span>)</span>
+
+<span><span>!</span>[<span>GitHub Light</span>](<span>/assets/icon/github-light.png#dark</span>)</span>
+<span><span>!</span>[<span>GitHub Dark</span>](<span>/assets/icon/github-dark.png#light</span>)</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div></div></div></li>
+<li>
+<p>imageSize</p>
+<p>可以使用 <code>=widthxheight</code> 指定图像大小。</p>
+<div><pre><code>![Alt](/example.png =200x300)
+![Alt](/example.jpg "图片标题" =200x)
+![Alt](/example.bmp =x300)
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div></div></div><p>上面的 Markdown 将被解析为：</p>
+<div><pre><code><span><span><span>&lt;</span>img</span> <span>src</span><span><span>=</span><span>"</span>/example.png<span>"</span></span> <span>width</span><span><span>=</span><span>"</span>200<span>"</span></span> <span>height</span><span><span>=</span><span>"</span>300<span>"</span></span> <span>/></span></span>
+<span><span><span>&lt;</span>img</span> <span>src</span><span><span>=</span><span>"</span>/example.jpg<span>"</span></span> <span>title</span><span><span>=</span><span>"</span>图片标题<span>"</span></span> <span>width</span><span><span>=</span><span>"</span>200<span>"</span></span> <span>/></span></span>
+<span><span><span>&lt;</span>img</span> <span>src</span><span><span>=</span><span>"</span>/example.bmp<span>"</span></span> <span>height</span><span><span>=</span><span>"</span>300<span>"</span></span> <span>/></span></span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div></div></div></li>
+</ul>
+<h2 id="导入文件" tabindex="-1"> 导入文件</h2>
+<p>使用 <code>@include(filename)</code> 导入文件。</p>
+<p>如果要部分导入文件，可以指定导入的行数。</p>
+<ul>
+<li><code>@include(filename{start-end})</code></li>
+<li><code>@include(filename{start-})</code></li>
+<li><code>@include(filename{-end})</code></li>
+</ul>
+<h2 id="自定义对齐" tabindex="-1"> 自定义对齐</h2>
+<p>语法如下：</p>
+<div><pre><code>::: center
+要居中的段落
+:::
+
+::: right
+要居右的段落
+:::
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div><p>演示：</p>
+<div><p>W.I.P</p>
+<p>vuepress-theme-hope v2 仍在制作中，API 可能会有</p>
+<div style="text-align: center"><p>重大的变动。</p>
+</div>
+<p>如果你在使用过程中遇到了 bug，可以</p>
+<div style="text-align: right"><p><a href="https://github.com/vuepress-theme-hope/vuepress-theme-hope/issues" target="_blank" rel="noopener noreferrer">提一个 issue</a>。</p>
+</div>
+</div>
+<div><pre><code>:::: danger W.I.P
+vuepress-theme-hope v2 仍在制作中，API 可能会有
+
+::: center
+重大的变动。
+:::
+
+如果你在使用过程中遇到了 bug，可以
+
+::: right
+<span>[<span>提一个 issue</span>](<span>https://github.com/vuepress-theme-hope/vuepress-theme-hope/issues</span>)</span>。
+:::
+
+::::
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div><hr>
+<section>
+<ol>
+<li id="footnote1"><p>脚注 <strong>可以包含特殊标记</strong></p>
+<p>也可以由多个段落组成 </p>
+</li>
+<li id="footnote2"><p>脚注文字。  </p>
+</li>
+<li id="footnote3"><p>Text of inline footnote </p>
+</li>
+</ol>
+</section>
+]]></content:encoded>
+      <enclosure url="https://floli.cc/assets/icon/github-light.png#gh-dark-mode-only" type="image/"/>
+    </item>
+    <item>
+      <title>配置</title>
+      <link>https://floli.cc/other/vuepressthemehope/config.html</link>
+      <guid>https://floli.cc/other/vuepressthemehope/config.html</guid>
+      <source url="https://floli.cc/rss.xml">配置</source>
+      <description>VuePress Theme Hope Config</description>
+      <category>other</category>
+      <pubDate>Wed, 13 Jul 2022 14:57:49 GMT</pubDate>
+      <content:encoded><![CDATA[<h1 id="配置" tabindex="-1"> 配置</h1>
+<p>VuePress 使用项目文件夹下的 <code>.vuepress</code> 文件夹存放配置，所有 VuePress 相关的文件都将会被放在这里。 其中 <code>.vuepress/config.ts</code>（或 <code>.vuepress/config.js</code>）是必要的配置文件。</p>
+<p>使用模板初始化成功后，<code>.vuepress/</code> 文件夹下的目录结构如下：</p>
+<div><pre><code>.
+├── config.ts → 配置文件的入口文件，其中导入了 navbar.ts, sidebar.ts, theme.ts 配置文件
+├── navbar.ts → 导航栏配置文件
+├── public → 静态资源目录
+│   ├── favicon.ico
+│   ├── logo.png
+│   └── logo.svg
+├── sidebar.ts → 侧边栏配置文件
+├── styles → 自定义样式文件
+│   ├── index.scss
+│   └── palette.scss
+└── theme.ts → 主题配置文件
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div><h2 id="配置的作用域" tabindex="-1"> 配置的作用域</h2>
+<h3 id="站点配置" tabindex="-1"> 站点配置</h3>
+<p>站点配置中的配置项直接被 VuePress 直接读取，和主题无关且在所有主题均可生效。</p>
+<p>你可以前往 <a href="https://v2.vuepress.vuejs.org/zh/reference/config.html" target="_blank" rel="noopener noreferrer">VuePress2 → 参考 → 配置</a> 查看所有 VuePress 配置。</p>
+<p>站点配置一般写在 <code>config.ts</code> 中。</p>
+<h3 id="主题配置" tabindex="-1"> 主题配置</h3>
+<p>主题配置是传递给 <code>hopeTheme</code> 函数的对象，它将由 VuePress Theme Hope 处理。</p>
+<p>在 VuePress Theme Hope 官网的 <a href="https://vuepress-theme-hope.github.io/v2/zh/config/" target="_blank" rel="noopener noreferrer">配置 → 主题配置</a> 中找到全部的主题设置。</p>
+<h4 id="插件配置" tabindex="-1"> 插件配置</h4>
+<p>VuePress Theme Hope 主题捆绑了一些插件，你可以在主题选项中通过 <code>plugins.插件名称</code> 来传递插件选项，详见 VuePress Theme Hope 官网的 <a href="">配置 → 主题插件配置</a>。</p>
+<p>如果你想要额外使用插件，请自行调用插件并传递插件选项，详见 <a href="">VuePress → 插件</a>。</p>
+<h4 id="导航栏和侧边栏配置" tabindex="-1"> 导航栏和侧边栏配置</h4>
+<p>使用模板创建的 VuePress Theme Hope 把导航栏配置放在 <code>navbar.ts</code> 文件，把侧边栏配置放在 <code>sidebar.ts</code> 文件，并在 <code>config.ts</code> 文件中导入这两个文件。</p>
+<h3 id="样式配置" tabindex="-1"> 样式配置</h3>
+<p>VuePress Theme Hope 使用 <code>.vuepress/styles</code> 文件夹存放样式配置。</p>
+<p>在此文件夹中：</p>
+<ul>
+<li>创建 <code>index.scss</code> 来注入额外的 CSS 样式</li>
+<li>创建 <code>config.scss</code> 来进行样式配置</li>
+<li>创建 <code>palette.scss</code> 来配置颜色和布局</li>
+</ul>
+<p>详情查看 VuePress Theme Hope 的官网的 <a href="https://vuepress-theme-hope.github.io/v2/zh/config/style.html" target="_blank" rel="noopener noreferrer">配置 → 样式配置</a>。</p>
+<h3 id="页面配置" tabindex="-1"> 页面配置</h3>
+<p>除了在配置文件中配置，页面相关的配置还支持通过 Markdown 文件中的 YAML Frontmatter 进行特定页面配置。</p>
+<div><p>相关信息</p>
+<p>Frontmatter 是 VuePress 中很重要的一个概念，它用于承载 Markdown 文件的配置。Markdown 文件可以包含一个 YAML Frontmatter。</p>
+<p>YAML 语法：<a href="https://mrhope.site/code/language/yaml/" target="_blank" rel="noopener noreferrer">https://mrhope.site/code/language/yaml/</a></p>
+<p>Frontmatter 必须在 Markdown 文件的顶部，并且被包裹在一对三短划线中间。</p>
+<div><pre><code><span><span>---</span>
+<span><span>lang</span><span>:</span> zh<span>-</span>CN
+<span>title</span><span>:</span> 页面的标题
+<span>description</span><span>:</span> 页面的描述</span>
+<span>---</span></span>
+
+<span>&lt;!-- 这里是 Markdown 内容 --></span>
+
+...
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div><p>Frontmatter 配置的优先级高于配置文件的配置且仅对当前页面有效，可以通过 Frontmatter 配置覆盖掉配置文件的配置，实现页面的定制化。</p>
+</div>
+<h2 id="配置参考" tabindex="-1"> 配置参考</h2>
+<h3 id="config-ts" tabindex="-1"> config.ts</h3>
+<details><summary>详情</summary>
+<div><pre><code><span>import</span> <span>{</span> defineUserConfig <span>}</span> <span>from</span> <span>"vuepress"</span><span>;</span>
+<span>import</span> theme <span>from</span> <span>"./theme"</span><span>;</span>
+
+<span>export</span> <span>default</span> <span>defineUserConfig</span><span>(</span><span>{</span>
+  lang<span>:</span> <span>"zh-CN"</span><span>,</span>
+  title<span>:</span> <span>"Notebook"</span><span>,</span>
+  description<span>:</span> <span>"Ackerven's knowledge planet."</span><span>,</span>
+
+  base<span>:</span> <span>"/"</span><span>,</span>
+  shouldPrefetch<span>:</span> <span>false</span><span>,</span>
+  theme<span>,</span> <span>// import theme config</span>
+<span>}</span><span>)</span><span>;</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div></details>
+<h3 id="theme-ts" tabindex="-1"> theme.ts</h3>
+<details><summary>详情</summary>
+<div><pre><code><span>import</span> <span>{</span> hopeTheme <span>}</span> <span>from</span> <span>"vuepress-theme-hope"</span><span>;</span>
+<span>import</span> navbar <span>from</span> <span>"./navbar"</span><span>;</span>
+<span>import</span> sidebar <span>from</span> <span>"./sidebar"</span><span>;</span>
+
+<span>export</span> <span>default</span> <span>hopeTheme</span><span>(</span><span>{</span>
+  <span>// base</span>
+  hostname<span>:</span> <span>"https://floli.cc"</span><span>,</span>
+  author<span>:</span> <span>{</span>
+    name<span>:</span> <span>"Ackerven"</span><span>,</span>
+    url<span>:</span> <span>"https://ackerven.com"</span><span>,</span>
+  <span>}</span><span>,</span>
+
+  <span>// view</span>
+  darkmode<span>:</span> <span>"switch"</span><span>,</span>
+  themeColor<span>:</span> <span>{</span>
+    blue<span>:</span> <span>"#2196f3"</span><span>,</span>
+    red<span>:</span> <span>"#f26d6d"</span><span>,</span>
+    green<span>:</span> <span>"#3eaf7c"</span><span>,</span>
+    orange<span>:</span> <span>"#fb9b5f"</span><span>,</span>
+  <span>}</span><span>,</span>
+  iconAssets<span>:</span> <span>"iconfont"</span><span>,</span>
+  fullscreen<span>:</span> <span>true</span><span>,</span>
+  backToTop<span>:</span> <span>true</span><span>,</span>
+  pure<span>:</span> <span>false</span><span>,</span>
+
+  <span>// layout</span>
+  <span>// layout -> navbar</span>
+  navbar<span>:</span> navbar<span>,</span>
+  logo<span>:</span> <span>"/logo.svg"</span><span>,</span>
+  repo<span>:</span> <span>"ackerven/vth-notebook"</span><span>,</span>
+  repoLabel<span>:</span> <span>"Github"</span><span>,</span>
+  repoDisplay<span>:</span> <span>true</span><span>,</span>
+
+  <span>// layout -> sidebar</span>
+  headerDepth<span>:</span> <span>2</span><span>,</span>
+  sidebarIcon<span>:</span> <span>true</span><span>,</span>
+  sidebar<span>:</span> sidebar<span>,</span>
+
+  <span>// layout -> other</span>
+  breadcrumb<span>:</span> <span>true</span><span>,</span>
+  breadcrumbIcon<span>:</span> <span>true</span><span>,</span>
+  footer<span>:</span> <span>"Try again!"</span><span>,</span>
+  displayFooter<span>:</span> <span>true</span><span>,</span>
+  toc<span>:</span> <span>true</span><span>,</span>
+
+  <span>// function</span>
+  encrypt<span>:</span> <span>{</span>
+    global<span>:</span> <span>true</span><span>,</span>
+    admin<span>:</span> <span>[</span><span>'admin'</span><span>,</span> <span>'123456'</span><span>]</span><span>,</span>
+  <span>}</span><span>,</span>
+  pageInfo<span>:</span> <span>[</span><span>"Author"</span><span>,</span> <span>"Date"</span><span>,</span> <span>"Category"</span><span>,</span> <span>"Tag"</span><span>,</span> <span>"ReadingTime"</span><span>,</span> <span>"Word"</span><span>]</span><span>,</span>
+  <span>// docsRepo: "vue-notebook"</span>
+  docsBranch<span>:</span> <span>"master"</span><span>,</span>
+  docsDir<span>:</span> <span>"docs"</span><span>,</span>
+  lastUpdated<span>:</span> <span>true</span><span>,</span>
+  contributors<span>:</span> <span>true</span><span>,</span>
+  editLink<span>:</span> <span>true</span><span>,</span>
+
+  <span>// plugins</span>
+  plugins<span>:</span> <span>{</span>
+    blog<span>:</span> <span>{</span>
+      autoExcerpt<span>:</span> <span>true</span><span>,</span>
+    <span>}</span><span>,</span>
+
+    mdEnhance<span>:</span> <span>{</span>
+      tex<span>:</span> <span>true</span><span>,</span>
+      sub<span>:</span> <span>true</span><span>,</span>
+      sup<span>:</span> <span>true</span><span>,</span>
+      codetabs<span>:</span> <span>true</span><span>,</span>
+      tasklist<span>:</span> <span>true</span><span>,</span>
+      mark<span>:</span> <span>true</span><span>,</span>
+      footnote<span>:</span> <span>true</span><span>,</span>
+      container<span>:</span> <span>true</span><span>,</span>
+
+      imageMark<span>:</span> <span>true</span><span>,</span>
+      imageSize<span>:</span> <span>true</span><span>,</span>
+      include<span>:</span> <span>true</span><span>,</span>
+      attrs<span>:</span> <span>true</span><span>,</span>
+      align<span>:</span> <span>true</span><span>,</span>
+      gfm<span>:</span> <span>true</span><span>,</span>
+      linkCheck<span>:</span> <span>"always"</span><span>,</span>
+    <span>}</span><span>,</span>
+
+    <span>// in function</span>
+    copyCode<span>:</span> <span>{</span>
+      showInMobile<span>:</span> <span>true</span><span>,</span>
+      duration<span>:</span> <span>2000</span><span>,</span>
+    <span>}</span><span>,</span>
+    photoSwipe<span>:</span> <span>{</span><span>}</span><span>,</span>
+    copyright<span>:</span> <span>{</span>
+      global<span>:</span> <span>true</span><span>,</span>
+      triggerWords<span>:</span> <span>100</span><span>,</span>
+      disableCopy<span>:</span> <span>false</span><span>,</span>
+      disableSelection<span>:</span> <span>false</span><span>,</span>
+      author<span>:</span> <span>"Ackerven"</span><span>,</span>
+      license<span>:</span> <span>"None"</span><span>,</span>
+    <span>}</span><span>,</span>
+
+    <span>// in advanced</span>
+    feed<span>:</span> <span>{</span>
+      atom<span>:</span> <span>true</span><span>,</span>
+      json<span>:</span> <span>true</span><span>,</span>
+      rss<span>:</span> <span>true</span><span>,</span>
+    <span>}</span><span>,</span>
+    pwa<span>:</span> <span>{</span>
+      cachePic<span>:</span> <span>false</span><span>,</span>
+      cacheHTML<span>:</span> <span>false</span><span>,</span>
+      maxSize<span>:</span> <span>2048</span><span>,</span>
+      maxPicSize<span>:</span> <span>1024</span><span>,</span>
+      update<span>:</span> <span>"available"</span><span>,</span>
+      manifest<span>:</span> <span>{</span>
+        <span>"name"</span><span>:</span> <span>"Ackerven's Notebook"</span><span>,</span>
+        <span>"short_name"</span><span>:</span> <span>"Notebook"</span><span>,</span>
+        <span>"description"</span><span>:</span> <span>"Ackerven's knowledge planet."</span><span>,</span>
+        <span>"icons"</span><span>:</span> <span>[</span>
+          <span>{</span>
+            <span>"src"</span><span>:</span> <span>"/images/icons/icon-72x72.png"</span><span>,</span>
+            <span>"sizes"</span><span>:</span> <span>"72x72"</span><span>,</span>
+            <span>"type"</span><span>:</span> <span>"image/png"</span>
+          <span>}</span><span>,</span>
+          <span>{</span>
+            <span>"src"</span><span>:</span> <span>"/images/icons/icon-96x96.png"</span><span>,</span>
+            <span>"sizes"</span><span>:</span> <span>"96x96"</span><span>,</span>
+            <span>"type"</span><span>:</span> <span>"image/png"</span>
+          <span>}</span><span>,</span>
+          <span>{</span>
+            <span>"src"</span><span>:</span> <span>"/images/icons/icon-128x128.png"</span><span>,</span>
+            <span>"sizes"</span><span>:</span> <span>"128x128"</span><span>,</span>
+            <span>"type"</span><span>:</span> <span>"image/png"</span>
+          <span>}</span><span>,</span>
+          <span>{</span>
+            <span>"src"</span><span>:</span> <span>"/images/icons/icon-144x144.png"</span><span>,</span>
+            <span>"sizes"</span><span>:</span> <span>"144x144"</span><span>,</span>
+            <span>"type"</span><span>:</span> <span>"image/png"</span>
+          <span>}</span><span>,</span>
+          <span>{</span>
+            <span>"src"</span><span>:</span> <span>"/images/icons/icon-152x152.png"</span><span>,</span>
+            <span>"sizes"</span><span>:</span> <span>"152x152"</span><span>,</span>
+            <span>"type"</span><span>:</span> <span>"image/png"</span>
+          <span>}</span><span>,</span>
+          <span>{</span>
+            <span>"src"</span><span>:</span> <span>"/images/icons/icon-192x192.png"</span><span>,</span>
+            <span>"sizes"</span><span>:</span> <span>"192x192"</span><span>,</span>
+            <span>"type"</span><span>:</span> <span>"image/png"</span>
+          <span>}</span><span>,</span>
+          <span>{</span>
+            <span>"src"</span><span>:</span> <span>"/images/icons/icon-384x384.png"</span><span>,</span>
+            <span>"sizes"</span><span>:</span> <span>"384x384"</span><span>,</span>
+            <span>"type"</span><span>:</span> <span>"image/png"</span>
+          <span>}</span><span>,</span>
+          <span>{</span>
+            <span>"src"</span><span>:</span> <span>"/images/icons/icon-512x512.png"</span><span>,</span>
+            <span>"sizes"</span><span>:</span> <span>"512x512"</span><span>,</span>
+            <span>"type"</span><span>:</span> <span>"image/png"</span>
+          <span>}</span>
+        <span>]</span>
+      <span>}</span>
+    <span>}</span><span>,</span>
+    sitemap<span>:</span> <span>{</span>
+      sitemapFilename<span>:</span> <span>"sitemap.xml"</span><span>,</span>
+      changefreq<span>:</span> <span>"daily"</span><span>,</span>
+    <span>}</span>
+  <span>}</span><span>,</span>
+<span>}</span><span>)</span><span>;</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div></details>
+<h3 id="navbar-ts" tabindex="-1"> navbar.ts</h3>
+<details><summary>详情</summary>
+<div><pre><code><span>import</span> <span>{</span> navbar <span>}</span> <span>from</span> <span>"vuepress-theme-hope"</span><span>;</span>
+
+<span>export</span> <span>default</span> <span>navbar</span><span>(</span><span>[</span>
+  <span>"/summary"</span><span>,</span>
+  <span>{</span>
+    text<span>:</span> <span>"基石"</span><span>,</span>
+    icon<span>:</span> <span>"material"</span><span>,</span>
+    prefix<span>:</span> <span>"/cornerstone/"</span><span>,</span>
+    children<span>:</span> <span>[</span><span>]</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+    text<span>:</span> <span>"语言"</span><span>,</span>
+    icon<span>:</span> <span>"code"</span><span>,</span>
+    prefix<span>:</span> <span>"/language/"</span><span>,</span>
+    children<span>:</span> <span>[</span><span>]</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+    text<span>:</span> <span>"框架"</span><span>,</span>
+    icon<span>:</span> <span>"frame"</span><span>,</span>
+    prefix<span>:</span> <span>"/framework/"</span><span>,</span>
+    children<span>:</span> <span>[</span><span>]</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+    text<span>:</span> <span>"算法"</span><span>,</span>
+    icon<span>:</span> <span>"branch"</span><span>,</span>
+    prefix<span>:</span> <span>"/algorithm/"</span><span>,</span>
+    children<span>:</span> <span>[</span><span>]</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+    text<span>:</span> <span>"技术"</span><span>,</span>
+    icon<span>:</span> <span>"tool"</span><span>,</span>
+    prefix<span>:</span> <span>"/technology/"</span><span>,</span>
+    children<span>:</span> <span>[</span><span>]</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+    text<span>:</span> <span>"哲学"</span><span>,</span>
+    icon<span>:</span> <span>"relation"</span><span>,</span>
+    prefix<span>:</span> <span>"/philosophy/"</span><span>,</span>
+    children<span>:</span> <span>[</span><span>]</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+    text<span>:</span> <span>"其他"</span><span>,</span>
+    icon<span>:</span> <span>"others"</span><span>,</span>
+    prefix<span>:</span> <span>"/other/"</span><span>,</span>
+    children<span>:</span> <span>[</span><span>]</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+    text<span>:</span> <span>"随笔"</span><span>,</span>
+    icon<span>:</span> <span>"article"</span><span>,</span>
+    link<span>:</span> <span>"/post/"</span><span>,</span>
+  <span>}</span><span>,</span>
+<span>]</span><span>)</span><span>;</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div></details>
+<h3 id="sidebar-ts" tabindex="-1"> sidebar.ts</h3>
+<details><summary>详情</summary>
+<div><pre><code><span>import</span> <span>{</span> sidebar <span>}</span> <span>from</span> <span>"vuepress-theme-hope"</span><span>;</span>
+
+<span>export</span> <span>default</span> <span>sidebar</span><span>(</span><span>{</span>
+  <span>"/cornerstone/"</span><span>:</span> <span>"structure"</span><span>,</span>
+  <span>"/language/"</span><span>:</span> <span>"structure"</span><span>,</span>
+  <span>"/framework/"</span><span>:</span> <span>"structure"</span><span>,</span>
+  <span>"/algorithm/"</span><span>:</span> <span>"structure"</span><span>,</span>
+  <span>"/technology/"</span><span>:</span> <span>"structure"</span><span>,</span>
+  <span>"/philosophy/"</span><span>:</span> <span>"structure"</span><span>,</span>
+  <span>"/post/"</span><span>:</span> <span>"structure"</span><span>,</span>
+  <span>"/other/"</span><span>:</span> <span>"structure"</span><span>,</span>
+  <span>// summary root dic</span>
+  <span>"/"</span><span>:</span> <span>[</span>
+  <span>"/"</span><span>,</span>
+  <span>"/summary"</span><span>,</span>
+  <span>{</span>
+      text<span>:</span> <span>"基石"</span><span>,</span>
+      icon<span>:</span> <span>"material"</span><span>,</span>
+      prefix<span>:</span> <span>"/cornerstone/"</span><span>,</span> 
+      collapsable<span>:</span> <span>true</span><span>,</span>
+      children<span>:</span> <span>"structure"</span><span>,</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+      text<span>:</span> <span>"语言"</span><span>,</span>
+      icon<span>:</span> <span>"code"</span><span>,</span>
+      prefix<span>:</span> <span>"/language/"</span><span>,</span>
+      collapsable<span>:</span> <span>true</span><span>,</span>
+      children<span>:</span> <span>"structure"</span><span>,</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+      text<span>:</span> <span>"框架"</span><span>,</span>
+      icon<span>:</span> <span>"frame"</span><span>,</span>
+      prefix<span>:</span> <span>"/framework/"</span><span>,</span> 
+      collapsable<span>:</span> <span>true</span><span>,</span>
+      children<span>:</span> <span>"structure"</span><span>,</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+      text<span>:</span> <span>"算法"</span><span>,</span>
+      icon<span>:</span> <span>"branch"</span><span>,</span>
+      prefix<span>:</span> <span>"/algorithm/"</span><span>,</span>
+      collapsable<span>:</span> <span>true</span><span>,</span>
+      children<span>:</span> <span>"structure"</span><span>,</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+      text<span>:</span> <span>"技术"</span><span>,</span>
+      icon<span>:</span> <span>"tool"</span><span>,</span>
+      prefix<span>:</span> <span>"/technology/"</span><span>,</span>
+      collapsable<span>:</span> <span>true</span><span>,</span>
+      children<span>:</span> <span>"structure"</span><span>,</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+      text<span>:</span> <span>"哲学"</span><span>,</span>
+      icon<span>:</span> <span>"relation"</span><span>,</span>
+      prefix<span>:</span> <span>"/philosophy/"</span><span>,</span>
+      collapsable<span>:</span> <span>true</span><span>,</span>
+      children<span>:</span> <span>"structure"</span><span>,</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+      text<span>:</span> <span>"随笔"</span><span>,</span>
+      icon<span>:</span> <span>"article"</span><span>,</span>
+      prefix<span>:</span> <span>"/post/"</span><span>,</span>
+      collapsable<span>:</span> <span>true</span><span>,</span>
+      children<span>:</span> <span>"structure"</span><span>,</span>
+  <span>}</span><span>,</span>
+  <span>{</span>
+      text<span>:</span> <span>"其他"</span><span>,</span>
+      icon<span>:</span> <span>"others"</span><span>,</span>
+      prefix<span>:</span> <span>"/other/"</span><span>,</span>
+      collapsable<span>:</span> <span>true</span><span>,</span>
+      children<span>:</span> <span>"structure"</span><span>,</span>
+  <span>}</span><span>,</span>
+  <span>]</span>
+<span>}</span><span>)</span><span>;</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div></details>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>部署</title>
+      <link>https://floli.cc/other/vuepressthemehope/deploy.html</link>
+      <guid>https://floli.cc/other/vuepressthemehope/deploy.html</guid>
+      <source url="https://floli.cc/rss.xml">部署</source>
+      <description>VuePress Theme Hope Deploy</description>
+      <category>other</category>
+      <pubDate>Wed, 13 Jul 2022 14:55:48 GMT</pubDate>
+      <content:encoded><![CDATA[<h1 id="部署" tabindex="-1"> 部署</h1>
+<p>使用 <code>vuepress dev [dir]</code> 启动一个开发服务器。</p>
+<p>使用 <code>vuepress build [dir]</code> 构建静态文件。</p>
+<p>与 VuePress 项目文件夹同级目录下，有个 <code>package.json</code> 文件，里面定义了一些命令：</p>
+<div><pre><code><span>{</span>
+  <span>"scripts"</span><span>:</span> <span>{</span>
+    <span>"docs:build"</span><span>:</span> <span>"vuepress build docs"</span><span>,</span>
+    <span>"docs:clean-dev"</span><span>:</span> <span>"vuepress dev docs --clean-cache"</span><span>,</span>
+    <span>"docs:dev"</span><span>:</span> <span>"vuepress dev docs"</span>
+  <span>}</span>
+<span>}</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div><p>这意味着可以使用以下命令代替原命令。</p>
+<ul>
+<li><code>pnpm docs:dev</code> 启动开发服务器</li>
+<li><code>pnpm docs:build</code> 构建项目</li>
+<li><code>pnpm docs:clean-dev</code> 清除缓存并启动开发服务器</li>
+</ul>
+<h2 id="开发服务器" tabindex="-1"> 开发服务器</h2>
+<p>开发服务器用于开发阶段，一般用于对主题进行调试或预览新文档。</p>
+<p>使用 <code>pnpm docs:dev</code> 启动一个开发服务器。开发服务器启动后，可以通过 IP + 端口或域名 + 端口的形式访问，默认端口为 <code>8080</code>。</p>
+<h2 id="静态文件" tabindex="-1"> 静态文件</h2>
+<p>使用 <code>pnpm docs:build</code> 构建网站的静态文件。构建成功后，网站内容会输出到 VuePress 项目的 <code>.vuepress/dist</code> 文件夹下面。</p>
+<h2 id="部署方式" tabindex="-1"> 部署方式</h2>
+<p>具体部署方式参考：<a href="https://v2.vuepress.vuejs.org/zh/guide/deployment.html" target="_blank" rel="noopener noreferrer">VuePress → 部署</a></p>
+<p>以下提供两种参考方案。</p>
+<h3 id="自购服务器" tabindex="-1"> 自购服务器</h3>
+<ol>
+<li>
+<p>安装 Node.js 和 Pnpm</p>
+</li>
+<li>
+<p>从 GitHub 拉取仓库</p>
+</li>
+<li>
+<p>在与 <code>docs</code> 同级的目录下执行 <code>pnpm install</code> ，安装依赖等。</p>
+</li>
+<li>
+<p>执行 <code>pnpm docs:build</code> 构建网站的静态文件</p>
+</li>
+<li>
+<p>添加 robots.txt 文件到 <code>docs/.vuepress/dist</code>，禁止爬虫爬取</p>
+<div><pre><code>User-Agent: *
+Disallow: /
+</code></pre><div aria-hidden="true"><div></div><div></div></div></div><p>可以直接执行：</p>
+<div><pre><code><span>echo</span> -e <span>"User-Agent: *<span title="\n">\n</span>Disallow: /"</span> <span>></span> docs/.vuepress/dist/robots.txt
+</code></pre><div aria-hidden="true"><div></div></div></div></li>
+<li>
+<p>新建一个网站，网站根目录指向 <code>.vuepress/dist</code> 文件夹</p>
+</li>
+<li>
+<p>如果存在 <code>.user.ini</code> 文件，执行以下命令删除：</p>
+<div><pre><code><span>sudo</span> chattr -i .user.ini
+<span>sudo</span> <span>rm</span> -rf .user.ini
+</code></pre><div aria-hidden="true"><div></div><div></div></div></div></li>
+<li>
+<p>通过域名访问</p>
+</li>
+</ol>
+<h3 id="私有仓库-公共仓库-github-pages-cloudflare" tabindex="-1"> 私有仓库 + 公共仓库 + GitHub Pages + Cloudflare</h3>
+<div><p>提示</p>
+<p>如果准备发布到 <code>https://&lt;username&gt;.github.io</code> ，需要将整个项目上传到 <code>https://github.com/&lt;username&gt;.github.io</code> 仓库，且不需要更改 base 配置。</p>
+<p>如果仓库地址是一个普通的形如 <code>https://github.com/&lt;username&gt;/&lt;repo&gt;</code> 的格式，网站将会发布到 <code>https://&lt;username&gt;.github.io/&lt;repo&gt;</code> ，这时候需要把 base 配置设置为 <code>&quot;/&lt;repo&gt;/&quot;</code> 。（ base 选项一般在 <code>config.ts</code> 中）</p>
+<p>如果使用域名访问，则 base 选项保持使用 <code>/</code>。</p>
+</div>
+<ol>
+<li>
+<p>把域名的 DNS 解析服务器改为 Cloudflare，并在 Cloudflare 添加 CNAME 解析</p>
+</li>
+<li>
+<p>把公开仓库账号的 PAT 并添加到私有仓库的 Secrets 中</p>
+</li>
+<li>
+<p>在私有仓库配置 Action</p>
+<p>配置 Action 的方式有两种方式。</p>
+<p>这两种方式本质都是一样的，都是为项目添加一个 <code>.github/workflows</code> 的文件夹，并在下面添加 <code>yml</code> 文件配置 Action。</p>
+<ul>
+<li>
+<p>通过 Github 官网配置</p>
+<p><img src="@source/other/vuepressthemehope/image-20220710161618898.png" alt="image-20220710161618898"></p>
+<p><img src="@source/other/vuepressthemehope/image-20220710161853682.png" alt="image-20220710161853682"></p>
+</li>
+<li>
+<p>通过本地添加</p>
+<ol>
+<li>在项目根文件夹下创建 <code>.github</code> 文件夹</li>
+<li>在 <code>.github</code> 文件夹下创建 <code>workflows</code> 文件夹</li>
+<li>在 <code>workflows</code> 文件夹下创建 <code>actionConfigurationName.yml</code></li>
+<li>填写具体的 Action 配置到 yml 文件</li>
+<li>执行 commit 并 push 到仓库</li>
+</ol>
+</li>
+</ul>
+<p><strong>Action 配置参考</strong>：</p>
+<details><summary>详情</summary>
+<div><pre><code><span># 该 ci 的名字，可以在仓库的 Github Actions tab 看到</span>
+<span>name</span><span>:</span> Deploy Notebook
+
+<span># 触发时机</span>
+<span>on</span><span>:</span>
+  <span># 代码 push 到 master 分支的时候运行该 workflow</span>
+  <span>push</span><span>:</span>
+    <span>branches</span><span>:</span> <span>[</span> master <span>]</span>
+
+<span>jobs</span><span>:</span>
+  <span># build-and-push 是 jobs 名字，随便取，可以有多个 jobs 默认并行</span>
+  <span>build-and-push</span><span>:</span>
+    <span>runs-on</span><span>:</span> ubuntu<span>-</span>latest <span># 该 jobs 运行的环境</span>
+    <span>steps</span><span>:</span>
+      <span>-</span> <span>name</span><span>:</span> Checkout
+        <span>uses</span><span>:</span> actions/checkout@v3
+        <span>with</span><span>:</span> <span># with 表示所需要的参数</span>
+          <span>persist-credentials</span><span>:</span> fasle <span># false 是用 personal token，true 是使用 GitHub token</span>
+          <span>fetch-depth</span><span>:</span> <span>0</span> <span># 保证能够 push 成功</span>
+
+      <span># 安装 pnpm</span>
+      <span>-</span> <span>name</span><span>:</span> Install pnpm
+        <span>uses</span><span>:</span> pnpm/action<span>-</span>setup@v2
+        <span>with</span><span>:</span>
+          <span>version</span><span>:</span> <span>7</span>
+          <span>run_install</span><span>:</span> <span>true</span>
+
+      <span># 安装 Node.js</span>
+      <span>-</span> <span>name</span><span>:</span> Setup Node.js
+        <span>uses</span><span>:</span> actions/setup<span>-</span>node@v3
+        <span>with</span><span>:</span>
+          <span>node-version</span><span>:</span> <span>16</span>
+          <span>cache</span><span>:</span> pnpm
+      
+      <span># Build </span>
+      <span>-</span> <span>name</span><span>:</span> Build Docs
+        <span>env</span><span>:</span>
+          <span>NODE_OPTIONS</span><span>:</span> <span>-</span><span>-</span>max_old_space_size=8192
+        <span>run</span><span>:</span> <span>|</span><span>
+          pnpm install vue-router
+          pnpm docs:build</span>
+          
+     <span># 将静态资源 Push 到公开仓库</span>
+     <span># &lt;domain> 需要 github.io 绑定的域名</span>
+     <span># &lt;username> git commit 用户名</span>
+     <span># &lt;mail> git commit 邮箱</span>
+     <span># &lt;message> git commit 的 message</span>
+     <span># &lt;secrets_name> secrets 名称（在公开仓库的账号生成 PAT，然后添加到私有仓库的 secrets 里面）</span>
+     <span># &lt;github_username> github 的用户名（公开仓库）</span>
+     <span># &lt;repo> 公开仓库名</span>
+      <span>-</span> <span>name</span><span>:</span> Commit and Push
+        <span>working-directory</span><span>:</span> docs/.vuepress/dist
+        <span>run</span><span>:</span> <span>|</span><span>
+          echo -e "User-Agent: *\nDisallow: /" > robots.txt
+          echo "&lt;domain>" > CNAME
+          git init
+          git checkout -b gh-pages
+          git add -A
+          git -c user.name='&lt;username>' -c user.email='&lt;mail>' commit -m '&lt;message>' 
+          git remote add origin https://${{secrets.&lt;secrets_name>}}@github.com/&lt;github_username>/&lt;repo>.git
+          git push origin gh-pages -f -q</span>
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div></details>
+<div><p>相关信息</p>
+<p>secrets.&lt;secrets_name&gt; 可以保证 Action 的配置中不会泄露敏感信息。</p>
+<p><img src="@source/other/vuepressthemehope/image-20220710164745406.png" alt="image-20220710164745406"></p>
+</div>
+</li>
+</ol>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>升级</title>
+      <link>https://floli.cc/other/vuepressthemehope/upgrade.html</link>
+      <guid>https://floli.cc/other/vuepressthemehope/upgrade.html</guid>
+      <source url="https://floli.cc/rss.xml">升级</source>
+      <description>VuePress Theme Hope Upgrade</description>
+      <category>other</category>
+      <pubDate>Wed, 13 Jul 2022 14:54:39 GMT</pubDate>
+      <content:encoded><![CDATA[<h1 id="升级" tabindex="-1"> 升级</h1>
+<p>如果需要升级主题和 VuePress 版本，执行以下命令。</p>
+<CodeTabs :data='[{"title":"npm"},{"title":"yarn"},{"title":"pnpm"}]'>
+
+<template #tab0="{ title, value, isActive }">
+<div><pre><code><span>npm</span> i vuepress@next vuepress-theme-hope@next <span>&amp;&amp;</span> <span>npm</span> <span>install</span> <span>&amp;&amp;</span> <span>npm</span> update
+</code></pre><div aria-hidden="true"><div></div></div></div></template>
+<template #tab1="{ title, value, isActive }">
+<div><pre><code><span>yarn</span> <span>add</span> vuepress@next vuepress-theme-hope@next <span>&amp;&amp;</span> <span>yarn</span> <span>install</span> <span>&amp;&amp;</span> <span>yarn</span> upgrade
+</code></pre><div aria-hidden="true"><div></div></div></div></template>
+<template #tab2="{ title, value, isActive }">
+<div><pre><code><span>pnpm</span> <span>add</span> vuepress@next vuepress-theme-hope@next <span>&amp;&amp;</span> <span>pnpm</span> i <span>&amp;&amp;</span> <span>pnpm</span> up
+</code></pre><div aria-hidden="true"><div></div></div></div></template>
+</CodeTabs>
+<h3 id="升级流程规范" tabindex="-1"> 升级流程规范</h3>
+<ol>
+<li>
+<p>从 master 分支 checkout 一个 updatetheme 分支</p>
+</li>
+<li>
+<p>完成更新（升级）</p>
+</li>
+<li>
+<p>在本地机器进行一次 build 的操作，模拟线上环境</p>
+<p>3.1 如果 build 操作失败，尝试修复错误，无法修复的错误，轻则丢弃 updatetheme，重则重装</p>
+</li>
+<li>
+<p>如果没有问题，把 updatetheme 分支 push 到 GitHub，提一个 pr</p>
+<ul>
+<li>升级主题时 <code>git commit</code> 信息填写规范：<strong>update theme(oldVersion) to newVersion</strong></li>
+<li>更新主题时 <code>git commit</code> 信息填写规范：<strong>fix theme config</strong></li>
+</ul>
+</li>
+<li>
+<p>检查是否能够进行合并，成功合并后删除 updatetheme 分支</p>
+</li>
+<li>
+<p>本地执行 <code> git remote prune origin --dry-run</code> 查看哪些远程分支失效，执行 <code>git remote prune origin</code>  清理远程分支</p>
+</li>
+<li>
+<p>其他设备执行 <code>git pull -a</code> 拉取最新分支</p>
+</li>
+</ol>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>项目结构</title>
+      <link>https://floli.cc/other/vuepressthemehope/structure.html</link>
+      <guid>https://floli.cc/other/vuepressthemehope/structure.html</guid>
+      <source url="https://floli.cc/rss.xml">项目结构</source>
+      <description>VuePress Theme Hope Structure</description>
+      <category>other</category>
+      <pubDate>Wed, 13 Jul 2022 14:51:53 GMT</pubDate>
+      <content:encoded><![CDATA[<h1 id="项目结构" tabindex="-1"> 项目结构</h1>
+<p>VuePress 只控制 VuePress 项目文件夹中的文件，所使用文件夹的其他文件不受 VuePress 的控制。</p>
+<div><p>注</p>
+<p>VuePress 项目文件夹与初始化项目时的位置参数有关。</p>
+<p>位置参数所填的文件夹名称即为 VuePress 的项目文件夹</p>
+<p>eg: <code>pnpm create vuepress-theme-hope@next docs</code>，其中， <code>docs</code> 就是 VuePress 的项目文件夹</p>
+</div>
+<p>一个基本的项目结构如下：</p>
+<div><pre><code>.
+├── .github (可选的) → GitHub 配置文件存放路径
+│    └── workflow → GitHub 工作流配置
+│         └── docs-deploy.yml → 自动部署文档的工作流
+|
+├── docs → 由你指定的项目文件夹
+│    │
+│    ├── .vuepress (可选的) → VuePress 配置文件夹
+│    │    │
+│    │    ├── dist (默认的) → 构建输出目录
+│    │    │
+│    │    ├── public (可选的) → 静态资源目录
+│    │    │
+│    │    ├── styles (可选的) → 用于存放样式相关的文件
+│    │    │
+│    │    ├── config.{js,ts} (可选的) → 配置文件的入口文件
+│    │    │
+│    │    └── client.{js,ts} (可选的) → 客户端文件
+│    │
+│    ├── ... → 其他项目文档
+│    │
+│    └── README.md → 项目主页
+│
+└── package.json → Nodejs 配置文件
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>]]></content:encoded>
+    </item>
+    <item>
+      <title>安装</title>
+      <link>https://floli.cc/other/vuepressthemehope/install.html</link>
+      <guid>https://floli.cc/other/vuepressthemehope/install.html</guid>
+      <source url="https://floli.cc/rss.xml">安装</source>
+      <description>VuePress Theme Hope Install</description>
+      <category>other</category>
+      <pubDate>Wed, 13 Jul 2022 14:50:07 GMT</pubDate>
+      <content:encoded><![CDATA[<h1 id="安装" tabindex="-1"> 安装</h1>
+<p>VuePress Theme Hope 是 VupPress 的主题，安装 VuePress Theme Hope 前需要安装 LTS 版本的 Node.js 。</p>
+<h2 id="node-js" tabindex="-1"> Node.js</h2>
+<p>Node.js 是一个基于 Chrome V8 引擎的 JavaScript 运行时环境。</p>
+<p>Node.js 下载地址：<a href="https://nodejs.org/en/" target="_blank" rel="noopener noreferrer">https://nodejs.org/en/</a></p>
+<h3 id="通过-nvm-安装" tabindex="-1"> 通过 NVM 安装</h3>
+<p>nvm 是 Node.js 版本管理工具，可以通过 nvm 管理多个 Node.js 和 NPM。</p>
+<p>nvm 项目地址：<a href="https://github.com/nvm-sh/nvm" target="_blank" rel="noopener noreferrer">https://github.com/nvm-sh/nvm</a></p>
+<h4 id="安装-nvm" tabindex="-1"> 安装 NVM</h4>
+<ol>
+<li>
+<p>运行脚本</p>
+<p>两种方式任选一个就行，运行这个脚本后，会把 nvm 下载到 ~/.nvm 下面</p>
+<div><pre><code><span>wget</span> -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh <span>|</span> <span>bash</span>
+</code></pre><div aria-hidden="true"><div></div></div></div><div><pre><code><span>curl</span> -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh <span>|</span> <span>bash</span>
+</code></pre><div aria-hidden="true"><div></div></div></div></li>
+<li>
+<p>添加环境变量</p>
+<p>脚本执行成功后，会在 <code>~/.bashrc</code> 添加下面内容。</p>
+<div><pre><code>export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] &amp;&amp; \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] &amp;&amp; \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div></div></div><p>执行 <code>source ~/.bashrc</code> 使环境变量生效，如果不生效，尝试登出系统或重启系统。</p>
+</li>
+<li>
+<p>验证安装</p>
+<div><pre><code>nvm -v
+</code></pre><div aria-hidden="true"><div></div></div></div></li>
+</ol>
+<div><p>提示</p>
+<p>You can customize the install source, directory, profile, and version using the <code>NVM_SOURCE</code>, <code>NVM_DIR</code>, <code>PROFILE</code>, and <code>NODE_VERSION</code> variables.</p>
+<p>Eg: <code>curl ... | NVM_DIR=&quot;path/to/nvm&quot;</code>. Ensure that the <code>NVM_DIR</code> does not contain a trailing slash.</p>
+</div>
+<h4 id="安装-nodejs" tabindex="-1"> 安装 Nodejs</h4>
+<ul>
+<li>安装最新版本：<code>nvm install node</code></li>
+<li>安装指定版本：<code>nvm install &lt;version&gt;</code> 。eg：<code>nvm install v16.15.0</code></li>
+</ul>
+<h4 id="常用命令" tabindex="-1"> 常用命令</h4>
+<ul>
+<li>查看支持的版本：<code>nvm ls-remote</code></li>
+<li>切换版本：<code>nvm use &lt;version&gt;</code> 。eg：<code>nvm use v18.0.0</code></li>
+</ul>
+<h3 id="通过二进制文件安装" tabindex="-1"> 通过二进制文件安装</h3>
+<p>这里根据官方给的文档，通过源码的方式安装。<a href="https://github.com/nodejs/help/wiki/Installation" target="_blank" rel="noopener noreferrer">官方文档</a></p>
+<ol>
+<li>
+<p>下载 Node.js 源码包</p>
+<div><pre><code><span>wget</span> https://nodejs.org/dist/v16.15.0/node-v16.15.0-linux-x64.tar.xz
+</code></pre><div aria-hidden="true"><div></div></div></div></li>
+<li>
+<p>解压到安装目录</p>
+<div><pre><code><span>VERSION</span><span>=</span>v16.15.0
+<span>DISTRO</span><span>=</span>linux-x64
+<span>sudo</span> <span>mkdir</span> -p /usr/local/lib/nodejs
+<span>sudo</span> <span>tar</span> -xJvf node-<span>$VERSION</span>-<span>$DISTRO</span>.tar.xz -C /usr/local/lib/nodejs 
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div></div></div></li>
+<li>
+<p>修改环境变量：仅为当前用户安装，修改 <code>~/.bashrc</code> ；为系统所有用户安装，修改 <code>/etc/profile</code></p>
+<div><pre><code># Node.js
+VERSION=v10.15.0
+DISTRO=linux-x64
+export PATH=/usr/local/lib/nodejs/node-$VERSION-$DISTRO/bin:$PATH
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div></div></div></li>
+<li>
+<p>重启生效</p>
+</li>
+<li>
+<p>查看版本</p>
+<div><pre><code>$ <span>node</span> -v
+v16.15.0
+$ <span>npm</span> -v
+<span>8.5</span>.5
+</code></pre><div aria-hidden="true"><div></div><div></div><div></div><div></div></div></div></li>
+</ol>
+<h2 id="pnpm" tabindex="-1"> Pnpm</h2>
+<p>推荐使用 pnpm 管理项目。</p>
+<p>安装 Node.js 后，安装 pnpm。</p>
+<div><pre><code>corepack <span>enable</span>
+corepack prepare pnpm@7.2.1 --activate
+</code></pre><div aria-hidden="true"><div></div><div></div></div></div><h2 id="初始化项目" tabindex="-1"> 初始化项目</h2>
+<p>找一个合适的位置作为安装目录。尽量避免使用包含中文文字、表情符号或空格的文件路径，建议使用纯英文的路径。</p>
+<p>在安装目录下执行：</p>
+<div><pre><code><span>pnpm</span> create vuepress-theme-hope@next <span>[</span>dir<span>]</span>
+</code></pre><div aria-hidden="true"><div></div></div></div><div><p>注</p>
+<p>[dir] 是一个参数，代表 VuePress 项目的文件夹名称，在实际执行时，需要使用实际的文件夹名称代替。例如：<code>docs</code>，<code>src</code> 。</p>
+<p>这个参数关系到后面执行的命令操作。</p>
+</div>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>VuePress Theme Hope</title>
+      <link>https://floli.cc/other/vuepressthemehope/</link>
+      <guid>https://floli.cc/other/vuepressthemehope/</guid>
+      <source url="https://floli.cc/rss.xml">VuePress Theme Hope</source>
+      <description>VuePress Theme Hope README</description>
+      <category>other</category>
+      <pubDate>Wed, 13 Jul 2022 14:47:02 GMT</pubDate>
+      <content:encoded><![CDATA[<h1 id="vuepress-theme-hope" tabindex="-1"> VuePress Theme Hope</h1>
+<p>VuePress Theme Hope 是一个具有强大功能的 Vuepress 主题。</p>
+<p>官方地址：<a href="https://vuepress-theme-hope.github.io/v2/zh/" target="_blank" rel="noopener noreferrer">https://vuepress-theme-hope.github.io/v2/zh/</a></p>
+<p><strong>文章列表</strong></p>
+<ul>
+<li><input type="checkbox" id="task-item-0" checked="checked" disabled="disabled"><label for="task-item-0"> <a href="/other/vuepressthemehope/install.html">VuePress Theme Hope 的安装</a></label></li>
+<li><input type="checkbox" id="task-item-1" checked="checked" disabled="disabled"><label for="task-item-1"> <a href="/other/vuepressthemehope/structure.html">Vuepress 的项目结构</a></label></li>
+<li><input type="checkbox" id="task-item-2" checked="checked" disabled="disabled"><label for="task-item-2"> <a href="/other/vuepressthemehope/upgrade.html">VuePress Theme Hope 的升级（更新）</a></label></li>
+<li><input type="checkbox" id="task-item-3" checked="checked" disabled="disabled"><label for="task-item-3"> <a href="/other/vuepressthemehope/deploy.html">VuePress Theme Hope 的部署</a></label></li>
+<li><input type="checkbox" id="task-item-4" checked="checked" disabled="disabled"><label for="task-item-4"> <a href="/other/vuepressthemehope/config.html">VuePress Theme Hope 的配置</a></label></li>
+<li><input type="checkbox" id="task-item-5" checked="checked" disabled="disabled"><label for="task-item-5"> <a href="/other/vuepressthemehope/markdown.html">VuePress Theme Hope 中新增的 Markdown 特性</a></label></li>
+<li><input type="checkbox" id="task-item-6" checked="checked" disabled="disabled"><label for="task-item-6"> <a href="/other/vuepressthemehope/note.html">笔记（本）的 CURD 流程规范</a></label></li>
+<li><input type="checkbox" id="task-item-7" checked="checked" disabled="disabled"><label for="task-item-7"> <a href="/other/vuepressthemehope/faq.html">FAQ</a></label></li>
+</ul>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>目录</title>
+      <link>https://floli.cc/summary.html</link>
+      <guid>https://floli.cc/summary.html</guid>
+      <source url="https://floli.cc/rss.xml">目录</source>
+      <description>目前所有的知识资产</description>
+      <category>other</category>
+      <pubDate>Sat, 09 Jul 2022 13:45:19 GMT</pubDate>
+      <content:encoded><![CDATA[<p>当前所拥有的所有知识资产。</p>
+<h2 id="基石" tabindex="-1"> <a href="/cornerstone/">基石</a></h2>
+<h2 id="语言" tabindex="-1"> <a href="/language/">语言</a></h2>
+<h2 id="框架" tabindex="-1"> <a href="/framework/">框架</a></h2>
+<h2 id="算法" tabindex="-1"> <a href="/algorithm/">算法</a></h2>
+<h2 id="技术" tabindex="-1"> <a href="/technology/">技术</a></h2>
+<h2 id="哲学" tabindex="-1"> <a href="/philosophy">哲学</a></h2>
+<h2 id="其他" tabindex="-1"> <a href="/other/">其他</a></h2>
+<ul>
+<li><input type="checkbox" id="task-item-0" checked="checked" disabled="disabled"><label for="task-item-0"> <a href="/other/vuepressthemehope/">VuePress Theme Hope</a></label></li>
+</ul>
+<h2 id="随笔" tabindex="-1"> <a href="/post/">随笔</a></h2>
+<ul>
+<li><a href="/post/PrivateHubGithubPages.html">GitHub 私有仓库开启 GitHub Pages 的可行性方案</a></li>
+</ul>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>算法</title>
+      <link>https://floli.cc/algorithm/</link>
+      <guid>https://floli.cc/algorithm/</guid>
+      <source url="https://floli.cc/rss.xml">算法</source>
+      <description>算法笔记</description>
+      <category>algorithm</category>
+      <pubDate>Sat, 09 Jul 2022 13:45:19 GMT</pubDate>
+      <content:encoded><![CDATA[<p>程序 = 数据结构 + 算法！</p>
+<h2 id="笔记集合" tabindex="-1"> 笔记集合</h2>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>基石</title>
+      <link>https://floli.cc/cornerstone/</link>
+      <guid>https://floli.cc/cornerstone/</guid>
+      <source url="https://floli.cc/rss.xml">基石</source>
+      <description>目前所有的知识资产</description>
+      <category>cornerstone</category>
+      <pubDate>Sat, 09 Jul 2022 13:45:19 GMT</pubDate>
+      <content:encoded><![CDATA[<p>计算机基础的学科。</p>
+<h2 id="笔记集合" tabindex="-1"> 笔记集合</h2>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>框架</title>
+      <link>https://floli.cc/framework/</link>
+      <guid>https://floli.cc/framework/</guid>
+      <source url="https://floli.cc/rss.xml">框架</source>
+      <description>用于生产的框架</description>
+      <category>framework</category>
+      <pubDate>Sat, 09 Jul 2022 13:45:19 GMT</pubDate>
+      <content:encoded><![CDATA[<p>用于生产的框架。</p>
+<h2 id="笔记集合" tabindex="-1"> 笔记集合</h2>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>语言</title>
+      <link>https://floli.cc/language/</link>
+      <guid>https://floli.cc/language/</guid>
+      <source url="https://floli.cc/rss.xml">语言</source>
+      <description>编程语言</description>
+      <category>language</category>
+      <pubDate>Sat, 09 Jul 2022 13:45:19 GMT</pubDate>
+      <content:encoded><![CDATA[<p>目前掌握的编程语言。</p>
+<h2 id="笔记集合" tabindex="-1"> 笔记集合</h2>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>其他</title>
+      <link>https://floli.cc/other/</link>
+      <guid>https://floli.cc/other/</guid>
+      <source url="https://floli.cc/rss.xml">其他</source>
+      <description>不便分类的文章</description>
+      <category>other</category>
+      <pubDate>Sat, 09 Jul 2022 13:45:19 GMT</pubDate>
+      <content:encoded><![CDATA[<p>不便分类的文章。</p>
+<h2 id="笔记集合" tabindex="-1"> 笔记集合</h2>
+<ul>
+<li><input type="checkbox" id="task-item-0" checked="checked" disabled="disabled"><label for="task-item-0"> <a href="/other/vuepressthemehope/">VuePress Theme Hope</a></label></li>
+</ul>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>哲学</title>
+      <link>https://floli.cc/philosophy/</link>
+      <guid>https://floli.cc/philosophy/</guid>
+      <source url="https://floli.cc/rss.xml">哲学</source>
+      <description>编程思想</description>
+      <category>philosophy</category>
+      <pubDate>Sat, 09 Jul 2022 13:45:19 GMT</pubDate>
+      <content:encoded><![CDATA[<p>编程思想。</p>
+<h2 id="笔记集合" tabindex="-1"> 笔记集合</h2>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>随笔</title>
+      <link>https://floli.cc/post/</link>
+      <guid>https://floli.cc/post/</guid>
+      <source url="https://floli.cc/rss.xml">随笔</source>
+      <description>发布的文章</description>
+      <category>article</category>
+      <pubDate>Sat, 09 Jul 2022 13:45:19 GMT</pubDate>
+      <content:encoded><![CDATA[<p>目前写的文章</p>
+<h2 id="文章集合" tabindex="-1"> 文章集合</h2>
+<ul>
+<li><a href="/post/PrivateHubGithubPages.html">GitHub 私有仓库开启 GitHub Pages 的可行性方案</a></li>
+</ul>
+]]></content:encoded>
+    </item>
+    <item>
+      <title>技术</title>
+      <link>https://floli.cc/technology/</link>
+      <guid>https://floli.cc/technology/</guid>
+      <source url="https://floli.cc/rss.xml">技术</source>
+      <description>技术</description>
+      <category>technology</category>
+      <pubDate>Sat, 09 Jul 2022 13:45:19 GMT</pubDate>
+      <content:encoded><![CDATA[<p>前沿技术。</p>
+<h2 id="笔记集合" tabindex="-1"> 笔记集合</h2>
+]]></content:encoded>
+    </item>
+  </channel>
+</rss>
